@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>Video Player</title>
     <style>
         * {
             margin: 0;
@@ -23,6 +23,7 @@
             align-items: center;
             background: url('assets/bgr.png') no-repeat center center;
             background-size: cover;
+            background-color: #1a1a1a;
         }
 
         .video-wrapper {
@@ -40,40 +41,77 @@
             align-items: center;
         }
 
-        video {
+        video, iframe {
             width: 100%;
             height: 100%;
+            border: none;
             display: block;
-            pointer-events: auto;
         }
 
-        /* Lớp phủ màn hình tải */
+        /* ================= 1. ANIMATION CỘT SÓNG GÓC TRÊN ================= */
+        .buffer-indicator {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 8px;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(4px);
+            border-radius: 6px;
+            pointer-events: none;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .buffer-indicator .bar {
+            width: 3.5px;
+            height: 16px;
+            background-color: #ffffff;
+            border-radius: 2px;
+            animation: soundWave 0.8s ease-in-out infinite alternate;
+        }
+
+        .buffer-indicator .bar:nth-child(1) { animation-delay: 0s; }
+        .buffer-indicator .bar:nth-child(2) { animation-delay: 0.25s; }
+        .buffer-indicator .bar:nth-child(3) { animation-delay: 0.5s; }
+
+        @keyframes soundWave {
+            0% { transform: scaleY(0.25); opacity: 0.4; }
+            100% { transform: scaleY(1); opacity: 1; }
+        }
+
+        /* ================= 2. ANIMATION BÌNH TAM GIÁC Ở GIỮA ================= */
         .loading-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(0, 0, 0, 0.65); /* Làm mờ nền để nhìn thấy video phía dưới */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 20;
             pointer-events: none;
-            transition: opacity 0.4s ease;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
-        /* Animation Sprite Cup */
         .cup-animation {
             width: 313px;
-            height: 627px; /* 5016 / 8 = 627px */
+            height: 627px;
             background-image: url('assets/cup.png'), url('cup.png');
             background-repeat: no-repeat;
             background-position: 0 0;
             animation: playCup 1.2s steps(8) infinite;
             transform: scale(0.25);
-            margin: -210px 0; /* Thu hẹp khoảng trống do scale */
+            margin: -210px 0;
         }
 
         @keyframes playCup {
@@ -81,7 +119,6 @@
             to { background-position-y: -5016px; }
         }
 
-        /* Dòng chữ Đang tải video... */
         .loading-text {
             color: #ffffff;
             font-family: Arial, sans-serif;
@@ -91,7 +128,6 @@
             margin-top: 10px;
         }
 
-        /* Chấm chạy lặp lại 1 -> 2 -> 3 chấm */
         .dots::after {
             content: '';
             animation: loadingDots 1.5s infinite steps(4, jump-none);
@@ -104,12 +140,25 @@
             75%  { content: '...'; }
             100% { content: ''; }
         }
+
+        /* CLASS ĐỂ ẨN ĐỒNG BỘ CẢ 2 */
+        .is-hidden {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
     </style>
 </head>
 <body>
 
-    <div class="video-wrapper">
-        <!-- Lớp phủ lúc tải video -->
+    <div class="video-wrapper" id="videoWrapper">
+        <!-- 1. Cột sóng góc phải -->
+        <div class="buffer-indicator" id="bufferIndicator">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+
+        <!-- 2. Bình tam giác ở giữa -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="cup-animation"></div>
             <div class="loading-text">Đang tải video<span class="dots"></span></div>
@@ -123,27 +172,55 @@
     <script>
         const video = document.getElementById('mainVideo');
         const overlay = document.getElementById('loadingOverlay');
-        const fallbackLink = "Gắn link cho mình"; // Điền link dự phòng vào đây
+        const bufferIndicator = document.getElementById('bufferIndicator');
+        const wrapper = document.getElementById('videoWrapper');
+        const fallbackEmbedLink = "https://streamable.com/e/x4zt48?autoplay=1";
 
-        // Tắt màn hình tải khi video đã nạp đủ dữ liệu để phát
-        const hideLoading = () => {
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 400);
+        // Hàm HIỆN đồng thời cả Bình tam giác và Cột sóng
+        const showBuffering = () => {
+            overlay.classList.remove('is-hidden');
+            bufferIndicator.classList.remove('is-hidden');
         };
 
-        video.addEventListener('canplay', hideLoading);
+        // Hàm ẨN đồng thời cả Bình tam giác và Cột sóng
+        const hideBuffering = () => {
+            overlay.classList.add('is-hidden');
+            bufferIndicator.classList.add('is-hidden');
+        };
 
-        // Kiểm tra nếu file assets/video.mp4 lỗi/không có thì chuyển link dự phòng
-        video.querySelector('source').addEventListener('error', () => {
-            if (fallbackLink && fallbackLink !== "Gắn link cho mình") {
-                video.src = fallbackLink;
-                video.load();
+        // Khi video nạp đủ dữ liệu ban đầu -> Ẩn cả 2
+        video.addEventListener('canplay', hideBuffering);
+
+        // KHI VIDEO BỊ KHỰNG / ĐỨNG ĐỂ TẢI TIẾP DỮ LIỆU -> Hiện cả 2
+        video.addEventListener('waiting', showBuffering);
+        video.addEventListener('stalled', showBuffering);
+
+        // Khi người dùng tua video và phải đợi tải -> Hiện cả 2
+        video.addEventListener('seeking', showBuffering);
+
+        // KHI VIDEO TIẾP TỤC PHÁT BÌNH THƯỜNG -> Ẩn cả 2
+        video.addEventListener('playing', hideBuffering);
+        video.addEventListener('canplaythrough', hideBuffering);
+        video.addEventListener('seeked', hideBuffering);
+
+        // Nếu người dùng bấm Tạm dừng (Pause) chủ động thì ẩn hiệu ứng đi
+        video.addEventListener('pause', () => {
+            if (!video.seeking) {
+                hideBuffering();
             }
         });
 
-        // Chặn menu chuột phải, kéo thả và phím tắt
+        // Xử lý link dự phòng iframe (nếu không có file video.mp4 cục bộ)
+        video.querySelector('source').addEventListener('error', () => {
+            video.remove();
+            const iframe = document.createElement('iframe');
+            iframe.src = fallbackEmbedLink;
+            iframe.allow = "fullscreen; autoplay";
+            iframe.onload = hideBuffering;
+            wrapper.appendChild(iframe);
+        });
+
+        // Chặn phím tắt và chuột phải
         document.addEventListener('contextmenu', (e) => e.preventDefault());
         document.addEventListener('dragstart', (e) => e.preventDefault());
         document.addEventListener('keydown', (e) => {
