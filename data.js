@@ -32,6 +32,15 @@ const javaPackList = [
 // ========================================================
 const bedrockPackList = [
   {
+    title: "10 gui waifu+",
+    key: "hentai 210",
+    images: [
+      "assets/gui/1ten.png",
+    ],
+    desc: "Download pack tại link dưới đây",
+    link: "https://link4m.org/go/rXymg"
+  },
+  {
     title: "#2 BetMC",
     key: "live animation",
     images: [
