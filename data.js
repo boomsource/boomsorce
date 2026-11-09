@@ -24,28 +24,29 @@ const notes = {
 // DANH SÁCH PACK JAVA CHÍNH
 // ========================================================
 const javaPackList = [
-  {
-    title: "Yuki Suou",
-    key: "Yuki Suou 210 roshidere",
-    images: [
-      "assets/yuki/yuki1.png",
-      "assets/yuki/yuki2.png",
-      "assets/yuki/yuki3.png",
-      "assets/yuki/yuki4.png",
-      "assets/yuki/yuki5.png",
-      "assets/yuki/yuki6.png",
-      "assets/yuki/yuki7.png",
-      "assets/yuki/yuki8.png",
-      "assets/yuki/yuki9.png"
-    ],
-    desc: "Download pack tại link dưới đây",
-    link: "https://link4m.org/XqvRTL"
-  },
+
 ];
 
 // ========================================================
 // DANH SÁCH PACK BEDROCK CHÍNH
 // ========================================================
 const bedrockPackList = [
-
+  {
+    title: "#2 BetMC",
+    key: "live animation",
+    images: [
+      "assets/live/2.png",
+    ],
+    desc: "Download pack tại link dưới đây",
+    link: "https://link4m.org/C31lMHt"
+  },
+  {
+    title: "#1 BetMC",
+    key: "live animation",
+    images: [
+      "assets/live/1.png",
+    ],
+    desc: "Download pack tại link dưới đây",
+    link: "https://link4m.net/C9O6N7YH"
+  },
 ];
