@@ -32,6 +32,15 @@ const javaPackList = [
 // ========================================================
 const bedrockPackList = [
   {
+    title: "Nahida210 Gui Bedrock",
+    key: "hentai 210 nahida genshin",
+    images: [
+      "assets/gui/a.png",
+    ],
+    desc: "Download pack tại link dưới đây",
+    link: "https://link4m.org/go/rwLEe"
+  },
+  {
     title: "10 gui waifu+",
     key: "hentai 210",
     images: [
